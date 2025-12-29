@@ -1,1 +1,4 @@
 dev/villanidev/sportstracker/streaming/MatchStreamingServiceApplication.class
+dev/villanidev/sportstracker/streaming/repository/MatchEventStreamingRepository.class
+dev/villanidev/sportstracker/streaming/service/MatchEventStreamManager.class
+dev/villanidev/sportstracker/streaming/repository/MatchStreamingRepository.class

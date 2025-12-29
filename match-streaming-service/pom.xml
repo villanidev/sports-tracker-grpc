@@ -47,6 +47,13 @@
             <artifactId>grpc-netty-shaded</artifactId>
             <version>${grpc.version}</version>
         </dependency>
+
+        <!-- Spring Boot gRPC server starter for a more Spring-native setup -->
+        <dependency>
+            <groupId>net.devh</groupId>
+            <artifactId>grpc-server-spring-boot-starter</artifactId>
+            <version>3.0.0.RELEASE</version>
+        </dependency>
     </dependencies>
 
     <build>

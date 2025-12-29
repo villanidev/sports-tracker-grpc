@@ -1,1 +1,4 @@
 /home/villani-ubuntu/projetos/sports-tracker-grpc/match-streaming-service/src/main/java/dev/villanidev/sportstracker/streaming/MatchStreamingServiceApplication.java
+/home/villani-ubuntu/projetos/sports-tracker-grpc/match-streaming-service/src/main/java/dev/villanidev/sportstracker/streaming/repository/MatchStreamingRepository.java
+/home/villani-ubuntu/projetos/sports-tracker-grpc/match-streaming-service/src/main/java/dev/villanidev/sportstracker/streaming/repository/MatchEventStreamingRepository.java
+/home/villani-ubuntu/projetos/sports-tracker-grpc/match-streaming-service/src/main/java/dev/villanidev/sportstracker/streaming/service/MatchEventStreamManager.java
