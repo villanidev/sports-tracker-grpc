@@ -1,0 +1,9 @@
+/home/villani-ubuntu/projetos/sports-tracker-grpc/match-operations-service/src/main/java/dev/villanidev/sportstracker/operations/repository/PlayerRepository.java
+/home/villani-ubuntu/projetos/sports-tracker-grpc/match-operations-service/src/main/java/dev/villanidev/sportstracker/operations/web/LiveMatchesRestController.java
+/home/villani-ubuntu/projetos/sports-tracker-grpc/match-operations-service/src/main/java/dev/villanidev/sportstracker/operations/web/OperationsController.java
+/home/villani-ubuntu/projetos/sports-tracker-grpc/match-operations-service/src/main/java/dev/villanidev/sportstracker/operations/service/MatchSimulationService.java
+/home/villani-ubuntu/projetos/sports-tracker-grpc/match-operations-service/src/main/java/dev/villanidev/sportstracker/operations/repository/MatchEventRepository.java
+/home/villani-ubuntu/projetos/sports-tracker-grpc/match-operations-service/src/main/java/dev/villanidev/sportstracker/operations/repository/TeamRepository.java
+/home/villani-ubuntu/projetos/sports-tracker-grpc/match-operations-service/src/main/java/dev/villanidev/sportstracker/operations/service/MatchOperationsService.java
+/home/villani-ubuntu/projetos/sports-tracker-grpc/match-operations-service/src/main/java/dev/villanidev/sportstracker/operations/repository/MatchRepository.java
+/home/villani-ubuntu/projetos/sports-tracker-grpc/match-operations-service/src/main/java/dev/villanidev/sportstracker/operations/MatchOperationsServiceApplication.java

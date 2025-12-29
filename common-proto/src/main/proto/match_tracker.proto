@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package matchtracker;
+
+option java_package = "dev.villanidev.sportstracker.grpc";
+option java_multiple_files = true;
+
+// Streaming service for per-match events
+service MatchStreamingService {
+  // Subscribe to a single match's event stream.
+  // Semantics:
+  // - On connect: server sends full historical events for the match
+  // - Then: streams new events as they occur until client disconnects
+  rpc SubscribeMatchEvents(SubscribeMatchEventsRequest) returns (stream MatchEventUpdate);
+}
+
+message SubscribeMatchEventsRequest {
+  string match_id = 1; // UUID as string
+  bool include_history = 2; // default true on server side
+}
+
+message MatchEventUpdate {
+  string event_id = 1;
+  string match_id = 2;
+  string event_type = 3; // GOAL, YELLOW_CARD, RED_CARD, SUBSTITUTION
+  string player_id = 4;
+  int32 minute = 5;
+  string details_json = 6; // serialized JSON from match_events.details
+  int32 home_score = 7;
+  int32 away_score = 8;
+  int64 created_at_epoch_millis = 9;
+}

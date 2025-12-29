@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sports-tracker-postgres
+    environment:
+      POSTGRES_DB: sports_tracker
+      POSTGRES_USER: sports
+      POSTGRES_PASSWORD: sports
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sports -d sports_tracker"]
+      interval: 5s
+      timeout: 5s
+      retries: 10

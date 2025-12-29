@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Match Operations Backoffice</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 2rem;
+      }
+      h1,
+      h2 {
+        margin-bottom: 0.5rem;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-bottom: 2rem;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 0.5rem;
+        text-align: left;
+      }
+      th {
+        background-color: #f5f5f5;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Match Operations Backoffice</h1>
+
+    <section>
+      <h2>Live Matches</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Home</th>
+            <th>Away</th>
+            <th>Status</th>
+            <th>Score</th>
+            <th>Minute</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="m : ${liveMatches}">
+            <td th:text="${m.id}"></td>
+            <td th:text="${m.homeTeam.name}"></td>
+            <td th:text="${m.awayTeam.name}"></td>
+            <td th:text="${m.status}"></td>
+            <td th:text="${m.homeScore} + ' - ' + ${m.awayScore}"></td>
+            <td th:text="${m.currentMinute}"></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Latest Events</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Match</th>
+            <th>Type</th>
+            <th>Player</th>
+            <th>Minute</th>
+            <th>Created At</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="e : ${latestEvents}">
+            <td th:text="${e.match.id}"></td>
+            <td th:text="${e.eventType}"></td>
+            <td th:text="${e.player != null ? e.player.name : 'N/A'}"></td>
+            <td th:text="${e.minute}"></td>
+            <td th:text="${e.createdAt}"></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <p>Simulation runs every 30 seconds and logs to the application console.</p>
+  </body>
+</html>

@@ -1,0 +1,6 @@
+/home/villani-ubuntu/projetos/sports-tracker-grpc/common-proto/target/generated-sources/protobuf/grpc-java/dev/villanidev/sportstracker/grpc/MatchStreamingServiceGrpc.java
+/home/villani-ubuntu/projetos/sports-tracker-grpc/common-proto/target/generated-sources/protobuf/java/dev/villanidev/sportstracker/grpc/MatchEventUpdate.java
+/home/villani-ubuntu/projetos/sports-tracker-grpc/common-proto/target/generated-sources/protobuf/java/dev/villanidev/sportstracker/grpc/MatchEventUpdateOrBuilder.java
+/home/villani-ubuntu/projetos/sports-tracker-grpc/common-proto/target/generated-sources/protobuf/java/dev/villanidev/sportstracker/grpc/MatchTracker.java
+/home/villani-ubuntu/projetos/sports-tracker-grpc/common-proto/target/generated-sources/protobuf/java/dev/villanidev/sportstracker/grpc/SubscribeMatchEventsRequest.java
+/home/villani-ubuntu/projetos/sports-tracker-grpc/common-proto/target/generated-sources/protobuf/java/dev/villanidev/sportstracker/grpc/SubscribeMatchEventsRequestOrBuilder.java

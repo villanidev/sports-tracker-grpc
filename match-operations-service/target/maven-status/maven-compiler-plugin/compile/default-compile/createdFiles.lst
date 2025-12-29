@@ -1,0 +1,10 @@
+dev/villanidev/sportstracker/operations/repository/MatchRepository.class
+dev/villanidev/sportstracker/operations/repository/MatchEventRepository.class
+dev/villanidev/sportstracker/operations/repository/TeamRepository.class
+dev/villanidev/sportstracker/operations/service/MatchSimulationService.class
+dev/villanidev/sportstracker/operations/MatchOperationsServiceApplication.class
+dev/villanidev/sportstracker/operations/web/LiveMatchesRestController.class
+dev/villanidev/sportstracker/operations/web/LiveMatchesRestController$MatchSummaryDto.class
+dev/villanidev/sportstracker/operations/repository/PlayerRepository.class
+dev/villanidev/sportstracker/operations/service/MatchOperationsService.class
+dev/villanidev/sportstracker/operations/web/OperationsController.class

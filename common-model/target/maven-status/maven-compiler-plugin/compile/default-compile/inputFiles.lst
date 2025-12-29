@@ -1,0 +1,6 @@
+/home/villani-ubuntu/projetos/sports-tracker-grpc/common-model/src/main/java/dev/villanidev/sportstracker/model/Match.java
+/home/villani-ubuntu/projetos/sports-tracker-grpc/common-model/src/main/java/dev/villanidev/sportstracker/model/MatchEvent.java
+/home/villani-ubuntu/projetos/sports-tracker-grpc/common-model/src/main/java/dev/villanidev/sportstracker/model/MatchEventType.java
+/home/villani-ubuntu/projetos/sports-tracker-grpc/common-model/src/main/java/dev/villanidev/sportstracker/model/MatchStatus.java
+/home/villani-ubuntu/projetos/sports-tracker-grpc/common-model/src/main/java/dev/villanidev/sportstracker/model/Player.java
+/home/villani-ubuntu/projetos/sports-tracker-grpc/common-model/src/main/java/dev/villanidev/sportstracker/model/Team.java
