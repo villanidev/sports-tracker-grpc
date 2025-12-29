@@ -119,7 +119,7 @@
               </td>
               <td>
                 <form
-                  th:if="${m.status == SCHEDULED}"
+                  th:if="${m.status != null and m.status.name() == 'SCHEDULED'}"
                   th:action="@{/operations/match/start}"
                   method="post"
                   style="display: inline"
@@ -131,7 +131,7 @@
                   <button type="submit">Start</button>
                 </form>
                 <form
-                  th:if="${m.clockState == RUNNING}"
+                  th:if="${m.clockState != null and m.clockState.name() == 'RUNNING'}"
                   th:action="@{/operations/match/pause}"
                   method="post"
                   style="display: inline"
@@ -143,7 +143,7 @@
                   <button type="submit">Pause</button>
                 </form>
                 <form
-                  th:if="${m.clockState == PAUSED or m.clockState == HALF_TIME}"
+                  th:if="${m.clockState != null and (m.clockState.name() == 'PAUSED' or m.clockState.name() == 'HALF_TIME')}"
                   th:action="@{/operations/match/resume}"
                   method="post"
                   style="display: inline"
@@ -155,7 +155,7 @@
                   <button type="submit">Resume</button>
                 </form>
                 <form
-                  th:if="${m.status == LIVE}"
+                  th:if="${m.status != null and m.status.name() == 'LIVE'}"
                   th:action="@{/operations/match/half-time}"
                   method="post"
                   style="display: inline"
@@ -167,7 +167,7 @@
                   <button type="submit">Half-time</button>
                 </form>
                 <form
-                  th:if="${m.status != FINISHED}"
+                  th:if="${m.status == null or m.status.name() != 'FINISHED'}"
                   th:action="@{/operations/match/finish}"
                   method="post"
                   style="display: inline"
@@ -181,7 +181,7 @@
               </td>
               <td>
                 <form
-                  th:if="${m.status == LIVE or m.status == HALF_TIME}"
+                  th:if="${m.status != null and (m.status.name() == 'LIVE' or m.status.name() == 'HALF_TIME')}"
                   th:action="@{/operations/match/event}"
                   method="post"
                   hx-post="/operations/match/event"
