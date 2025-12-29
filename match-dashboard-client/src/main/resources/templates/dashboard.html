@@ -4,28 +4,246 @@
     <meta charset="UTF-8" />
     <title>Match Dashboard</title>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+
+      header {
+        background: #111827;
+        color: #f9fafb;
+        padding: 1rem 1.5rem;
+      }
+
+      main {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 1.5rem;
+        padding: 1.5rem;
+      }
+
+      .panel {
+        background: #ffffff;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+        padding: 1rem 1.25rem;
+      }
+
+      .panel h2 {
+        margin-top: 0;
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #6b7280;
+      }
+
+      ul.live-matches {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      ul.live-matches li {
+        padding: 0.5rem 0.25rem;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      ul.live-matches li a {
+        color: #111827;
+        text-decoration: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      ul.live-matches li a:hover {
+        color: #2563eb;
+      }
+
+      .scoreboard-teams {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .scoreboard-score {
+        font-size: 2.25rem;
+        font-weight: 700;
+      }
+
+      .scoreboard-meta {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+      }
+
+      table.events {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+      }
+
+      table.events th,
+      table.events td {
+        padding: 0.4rem 0.5rem;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      table.events th {
+        text-align: left;
+        background: #f9fafb;
+        font-weight: 600;
+      }
+    </style>
   </head>
-  <body>
-    <h1>Match Dashboard</h1>
+  <body hx-boost="true">
+    <header>
+      <h1>Match Dashboard</h1>
+    </header>
 
-    <p>Provide a matchId in the URL to start streaming:</p>
-    <p>Example: <code>/dashboard?matchId=&lt;uuid&gt;</code></p>
+    <main>
+      <section class="panel">
+        <h2>Live Matches</h2>
+        <p th:if="${#lists.isEmpty(liveMatches)}">No live matches.</p>
+        <ul class="live-matches" th:if="${!#lists.isEmpty(liveMatches)}">
+          <li th:each="m : ${liveMatches}">
+            <a
+              th:href="@{/dashboard(matchId=${m.id})}"
+              th:classappend="${m.id} == ${matchId} ? ' active' : ''"
+            >
+              <span
+                th:text="${m.homeTeamName} + ' vs ' + ${m.awayTeamName}"
+              ></span>
+              <span>
+                <span th:text="${m.homeScore} + ' - ' + ${m.awayScore}"></span>
+                <span
+                  th:if="${m.currentMinute != null}"
+                  th:text="' · ' + ${m.currentMinute} + '\''"
+                ></span>
+              </span>
+            </a>
+          </li>
+        </ul>
+      </section>
 
-    <div th:if="${matchId != null}">
-      <h2 th:text="'Match ' + ${matchId}"></h2>
+      <section class="panel" th:if="${matchId != null}">
+        <div class="scoreboard">
+          <div class="scoreboard-teams">
+            <span
+              th:text="${selectedMatch != null} ? ${selectedMatch.homeTeamName} : 'Home'"
+            ></span>
+            <span class="scoreboard-score"
+              ><span
+                id="home-score"
+                th:text="${selectedMatch != null} ? ${selectedMatch.homeScore} : 0"
+              ></span>
+              -
+              <span
+                id="away-score"
+                th:text="${selectedMatch != null} ? ${selectedMatch.awayScore} : 0"
+              ></span
+            ></span>
+            <span
+              th:text="${selectedMatch != null} ? ${selectedMatch.awayTeamName} : 'Away'"
+            ></span>
+          </div>
+          <div class="scoreboard-meta">
+            <span
+              id="current-minute"
+              th:text="${selectedMatch != null && selectedMatch.currentMinute != null} ? 'Minute ' + ${selectedMatch.currentMinute} : 'Kick-off'"
+            ></span>
+          </div>
+        </div>
 
-      <pre id="events"></pre>
+        <h2>Event Timeline</h2>
+        <table class="events">
+          <thead>
+            <tr>
+              <th>Minute</th>
+              <th>Type</th>
+              <th>Details</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody id="events-body"></tbody>
+        </table>
 
-      <script th:inline="javascript">
-        const matchId = /*[[${matchId}]]*/ "";
-        if (matchId) {
-          const evtSource = new EventSource("/sse/matches/" + matchId);
-          const eventsEl = document.getElementById("events");
-          evtSource.addEventListener("match-event", function (e) {
-            eventsEl.textContent += e.data + "\n";
-          });
-        }
-      </script>
-    </div>
+        <script th:inline="javascript">
+          const matchId = /*[[${matchId}]]*/ "";
+          if (matchId) {
+            const evtSource = new EventSource("/sse/matches/" + matchId);
+            const eventsBody = document.getElementById("events-body");
+            const homeScoreEl = document.getElementById("home-score");
+            const awayScoreEl = document.getElementById("away-score");
+            const currentMinuteEl = document.getElementById("current-minute");
+
+            evtSource.addEventListener("match-event", function (e) {
+              try {
+                const ev = JSON.parse(e.data);
+
+                if (typeof ev.homeScore === "number") {
+                  homeScoreEl.textContent = ev.homeScore;
+                }
+                if (typeof ev.awayScore === "number") {
+                  awayScoreEl.textContent = ev.awayScore;
+                }
+                if (typeof ev.minute === "number") {
+                  currentMinuteEl.textContent = "Minute " + ev.minute;
+                }
+
+                let side = "";
+                let playerName = "";
+                if (ev.detailsJson) {
+                  try {
+                    const details = JSON.parse(ev.detailsJson);
+                    side = details.teamSide || "";
+                    playerName = details.playerName || "";
+                  } catch (err) {
+                    console.error("Error parsing detailsJson", err);
+                  }
+                }
+
+                const tr = document.createElement("tr");
+                const minuteTd = document.createElement("td");
+                minuteTd.textContent =
+                  typeof ev.minute === "number" ? ev.minute + "'" : "";
+
+                const typeTd = document.createElement("td");
+                typeTd.textContent = ev.eventType || "";
+
+                const detailsTd = document.createElement("td");
+                detailsTd.textContent = [side, playerName]
+                  .filter((p) => p)
+                  .join(" · ");
+
+                const scoreTd = document.createElement("td");
+                if (
+                  typeof ev.homeScore === "number" &&
+                  typeof ev.awayScore === "number"
+                ) {
+                  scoreTd.textContent =
+                    ev.homeScore.toString() + " - " + ev.awayScore.toString();
+                }
+
+                tr.appendChild(minuteTd);
+                tr.appendChild(typeTd);
+                tr.appendChild(detailsTd);
+                tr.appendChild(scoreTd);
+
+                // Prepend new events so the latest is always on top
+                eventsBody.insertBefore(tr, eventsBody.firstChild);
+              } catch (err) {
+                console.error("Error handling match-event", err);
+              }
+            });
+          }
+        </script>
+      </section>
+    </main>
   </body>
 </html>

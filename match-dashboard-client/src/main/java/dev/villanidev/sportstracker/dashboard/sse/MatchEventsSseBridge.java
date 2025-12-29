@@ -49,9 +49,19 @@ public class MatchEventsSseBridge {
             @Override
             public void onNext(MatchEventUpdate value) {
                 try {
+                    OutgoingMatchEvent dto = new OutgoingMatchEvent();
+                    dto.setMatchId(value.getMatchId());
+                    dto.setEventType(value.getEventType());
+                    dto.setPlayerId(value.getPlayerId());
+                    dto.setMinute(value.getMinute());
+                    dto.setHomeScore(value.getHomeScore());
+                    dto.setAwayScore(value.getAwayScore());
+                    dto.setDetailsJson(value.getDetailsJson());
+                    dto.setCreatedAtEpochMillis(value.getCreatedAtEpochMillis());
+
                     SseEmitter.SseEventBuilder event = SseEmitter.event()
                             .name("match-event")
-                            .data(value.toString());
+                            .data(dto);
                     emitter.send(event);
                 } catch (IOException e) {
                     log.warn("Error sending SSE event for match {}. Closing emitter.", matchId, e);
