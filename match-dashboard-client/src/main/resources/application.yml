@@ -1,0 +1,15 @@
+server:
+  port: 8082
+  http2:
+    enabled: true
+
+spring:
+  thymeleaf:
+    cache: false
+
+# gRPC client configuration for match-streaming-service
+grpc:
+  client:
+    match-streaming-service:
+      address: "static://localhost:9090"
+      negotiation-type: plaintext

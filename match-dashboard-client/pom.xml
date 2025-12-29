@@ -38,6 +38,13 @@
             <artifactId>grpc-netty-shaded</artifactId>
             <version>${grpc.version}</version>
         </dependency>
+
+        <!-- Spring Boot gRPC client starter for Spring-managed channels/stubs -->
+        <dependency>
+            <groupId>net.devh</groupId>
+            <artifactId>grpc-client-spring-boot-starter</artifactId>
+            <version>3.0.0.RELEASE</version>
+        </dependency>
     </dependencies>
 
     <build>

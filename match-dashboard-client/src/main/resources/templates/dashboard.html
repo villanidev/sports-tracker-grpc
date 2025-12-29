@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Match Dashboard</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+  </head>
+  <body>
+    <h1>Match Dashboard</h1>
+
+    <p>Provide a matchId in the URL to start streaming:</p>
+    <p>Example: <code>/dashboard?matchId=&lt;uuid&gt;</code></p>
+
+    <div th:if="${matchId != null}">
+      <h2 th:text="'Match ' + ${matchId}"></h2>
+
+      <pre id="events"></pre>
+
+      <script th:inline="javascript">
+        const matchId = /*[[${matchId}]]*/ "";
+        if (matchId) {
+          const evtSource = new EventSource("/sse/matches/" + matchId);
+          const eventsEl = document.getElementById("events");
+          evtSource.addEventListener("match-event", function (e) {
+            eventsEl.textContent += e.data + "\n";
+          });
+        }
+      </script>
+    </div>
+  </body>
+</html>
