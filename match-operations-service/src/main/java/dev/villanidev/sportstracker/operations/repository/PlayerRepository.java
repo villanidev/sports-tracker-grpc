@@ -12,4 +12,6 @@ import java.util.UUID;
 public interface PlayerRepository extends JpaRepository<Player, UUID> {
 
     List<Player> findByTeam(Team team);
+
+    long countByTeam(Team team);
 }

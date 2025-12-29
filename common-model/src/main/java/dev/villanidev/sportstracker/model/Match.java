@@ -33,6 +33,16 @@ public class Match {
     @Column(length = 20)
     private MatchStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "clock_state", length = 20)
+    private MatchClockState clockState;
+
+    @Column(name = "clock_offset_seconds")
+    private Integer clockOffsetSeconds;
+
+    @Column(name = "clock_last_started_at")
+    private Instant clockLastStartedAt;
+
     @Column(name = "home_score")
     private Integer homeScore = 0;
 
@@ -47,6 +57,9 @@ public class Match {
 
     @Column(name = "finished_at")
     private Instant finishedAt;
+
+    @Column(name = "demo_mode_enabled")
+    private Boolean demoModeEnabled;
 
     public UUID getId() {
         return id;
@@ -78,6 +91,30 @@ public class Match {
 
     public void setStatus(MatchStatus status) {
         this.status = status;
+    }
+
+    public MatchClockState getClockState() {
+        return clockState;
+    }
+
+    public void setClockState(MatchClockState clockState) {
+        this.clockState = clockState;
+    }
+
+    public Integer getClockOffsetSeconds() {
+        return clockOffsetSeconds;
+    }
+
+    public void setClockOffsetSeconds(Integer clockOffsetSeconds) {
+        this.clockOffsetSeconds = clockOffsetSeconds;
+    }
+
+    public Instant getClockLastStartedAt() {
+        return clockLastStartedAt;
+    }
+
+    public void setClockLastStartedAt(Instant clockLastStartedAt) {
+        this.clockLastStartedAt = clockLastStartedAt;
     }
 
     public Integer getHomeScore() {
@@ -118,5 +155,13 @@ public class Match {
 
     public void setFinishedAt(Instant finishedAt) {
         this.finishedAt = finishedAt;
+    }
+
+    public Boolean getDemoModeEnabled() {
+        return demoModeEnabled;
+    }
+
+    public void setDemoModeEnabled(Boolean demoModeEnabled) {
+        this.demoModeEnabled = demoModeEnabled;
     }
 }

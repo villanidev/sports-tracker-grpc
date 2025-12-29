@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Teams Management</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 2rem;
+      }
+      h1,
+      h2 {
+        margin-bottom: 0.5rem;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-bottom: 2rem;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 0.5rem;
+        text-align: left;
+      }
+      th {
+        background-color: #f5f5f5;
+      }
+    </style>
+  </head>
+  <body hx-boost="true">
+    <h1>Teams</h1>
+    <a href="/operations">&larr; Back to Operations</a>
+
+    <div id="teams-root" th:fragment="teamsRoot">
+      <section>
+        <h2>Create Team</h2>
+        <form
+          th:action="@{/operations/teams/create}"
+          method="post"
+          hx-post="/operations/teams/create"
+          hx-target="#teams-root"
+          hx-swap="outerHTML"
+        >
+          <label>
+            Name
+            <input type="text" name="name" required />
+          </label>
+          <button type="submit" style="margin-left: 0.5rem">Create</button>
+        </form>
+      </section>
+
+      <section>
+        <h2>Existing Teams</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="t : ${teams}">
+              <td th:text="${t.id}"></td>
+              <td th:text="${t.name}"></td>
+              <td>
+                <form
+                  th:action="@{/operations/teams/rename}"
+                  method="post"
+                  style="display: inline"
+                  hx-post="/operations/teams/rename"
+                  hx-target="#teams-root"
+                  hx-swap="outerHTML"
+                >
+                  <input type="hidden" name="teamId" th:value="${t.id}" />
+                  <input
+                    type="text"
+                    name="name"
+                    th:placeholder="${t.name}"
+                    style="width: 8rem"
+                  />
+                  <button type="submit">Rename</button>
+                </form>
+                <form
+                  th:action="@{/operations/teams/delete}"
+                  method="post"
+                  style="display: inline; margin-left: 0.5rem"
+                  hx-post="/operations/teams/delete"
+                  hx-target="#teams-root"
+                  hx-swap="outerHTML"
+                >
+                  <input type="hidden" name="teamId" th:value="${t.id}" />
+                  <button type="submit">Delete</button>
+                </form>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+  </body>
+</html>

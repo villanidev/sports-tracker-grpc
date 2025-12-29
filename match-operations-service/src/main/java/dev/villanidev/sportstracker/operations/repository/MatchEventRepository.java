@@ -14,4 +14,6 @@ public interface MatchEventRepository extends JpaRepository<MatchEvent, UUID> {
     List<MatchEvent> findTop20ByOrderByCreatedAtDesc();
 
     List<MatchEvent> findByMatchOrderByCreatedAtAsc(Match match);
+
+    void deleteByMatch(Match match);
 }

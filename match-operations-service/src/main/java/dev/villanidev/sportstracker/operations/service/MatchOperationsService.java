@@ -9,10 +9,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.annotation.PostConstruct;
+
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.UUID;
+
 
 @Service
 @Transactional
@@ -62,19 +66,61 @@ public class MatchOperationsService {
             playerRepository.save(pAway);
         }
 
+        Instant now = Instant.now();
+
         Match match = new Match();
         match.setHomeTeam(home);
         match.setAwayTeam(away);
         match.setStatus(MatchStatus.LIVE);
         match.setHomeScore(0);
         match.setAwayScore(0);
+        match.setStartedAt(now);
+
+        // Initialize clock: match already "in progress" around minute 1
+        match.setClockState(MatchClockState.RUNNING);
+        match.setClockOffsetSeconds(60); // 1 minute played
+        match.setClockLastStartedAt(now);
         match.setCurrentMinute(1);
-        match.setStartedAt(Instant.now());
+
+        // Start in demo mode for the seeded match so the simulator keeps working
+        match.setDemoModeEnabled(Boolean.TRUE);
+
         matchRepository.save(match);
     }
 
     public List<Match> findLiveMatches() {
         return matchRepository.findByStatus(MatchStatus.LIVE);
+    }
+
+    public List<Match> findAllMatches() {
+        return matchRepository.findAll();
+    }
+
+    public List<Team> findAllTeams() {
+        return teamRepository.findAll();
+    }
+
+    public Team createTeam(String name) {
+        Team team = new Team();
+        team.setName(name);
+        return teamRepository.save(team);
+    }
+
+    public void deleteTeam(UUID teamId) {
+        teamRepository.findById(teamId).ifPresent(team -> {
+            boolean inMatches = matchRepository.existsByHomeTeamOrAwayTeam(team, team);
+            long playerCount = playerRepository.countByTeam(team);
+            if (!inMatches && playerCount == 0) {
+                teamRepository.delete(team);
+            }
+        });
+    }
+
+    public void renameTeam(UUID teamId, String newName) {
+        teamRepository.findById(teamId).ifPresent(team -> {
+            team.setName(newName);
+            teamRepository.save(team);
+        });
     }
 
     public List<MatchEvent> findLatestEvents() {
@@ -85,8 +131,100 @@ public class MatchOperationsService {
         return matchEventRepository.findByMatchOrderByCreatedAtAsc(match);
     }
 
-    public Optional<Match> findMatchById(java.util.UUID id) {
+    public void deleteMatch(UUID matchId) {
+        matchRepository.findById(matchId).ifPresent(match -> {
+            matchEventRepository.deleteByMatch(match);
+            matchRepository.delete(match);
+        });
+    }
+
+    public Optional<Match> findMatchById(UUID id) {
         return matchRepository.findById(id);
+    }
+
+    public Match createMatch(UUID homeTeamId, UUID awayTeamId) {
+        Team home = teamRepository.findById(homeTeamId)
+                .orElseThrow(() -> new IllegalArgumentException("Home team not found"));
+        Team away = teamRepository.findById(awayTeamId)
+                .orElseThrow(() -> new IllegalArgumentException("Away team not found"));
+
+        Match match = new Match();
+        match.setHomeTeam(home);
+        match.setAwayTeam(away);
+        match.setStatus(MatchStatus.SCHEDULED);
+        match.setHomeScore(0);
+        match.setAwayScore(0);
+        match.setCurrentMinute(0);
+        match.setClockState(MatchClockState.NOT_STARTED);
+        match.setClockOffsetSeconds(0);
+        match.setDemoModeEnabled(Boolean.FALSE);
+
+        return matchRepository.save(match);
+    }
+
+    public void toggleDemoMode(UUID matchId, boolean enabled) {
+        matchRepository.findById(matchId).ifPresent(match -> {
+            match.setDemoModeEnabled(enabled);
+            matchRepository.save(match);
+        });
+    }
+
+    public void startMatch(UUID matchId) {
+        matchRepository.findById(matchId).ifPresent(match -> {
+            Instant now = Instant.now();
+            match.setStatus(MatchStatus.LIVE);
+            match.setStartedAt(now);
+            match.setClockState(MatchClockState.RUNNING);
+            if (match.getClockOffsetSeconds() == null) {
+                match.setClockOffsetSeconds(0);
+            }
+            match.setClockLastStartedAt(now);
+            computeAndUpdateCurrentMinute(match, now);
+            matchRepository.save(match);
+        });
+    }
+
+    public void pauseMatch(UUID matchId) {
+        matchRepository.findById(matchId).ifPresent(match -> {
+            if (match.getClockState() == MatchClockState.RUNNING) {
+                Instant now = Instant.now();
+                computeAndUpdateCurrentMinute(match, now);
+                match.setClockState(MatchClockState.PAUSED);
+                matchRepository.save(match);
+            }
+        });
+    }
+
+    public void resumeMatch(UUID matchId) {
+        matchRepository.findById(matchId).ifPresent(match -> {
+            if (match.getClockState() == MatchClockState.PAUSED || match.getClockState() == MatchClockState.HALF_TIME) {
+                Instant now = Instant.now();
+                match.setClockState(MatchClockState.RUNNING);
+                match.setClockLastStartedAt(now);
+                matchRepository.save(match);
+            }
+        });
+    }
+
+    public void halfTime(UUID matchId) {
+        matchRepository.findById(matchId).ifPresent(match -> {
+            Instant now = Instant.now();
+            computeAndUpdateCurrentMinute(match, now);
+            match.setStatus(MatchStatus.HALF_TIME);
+            match.setClockState(MatchClockState.HALF_TIME);
+            matchRepository.save(match);
+        });
+    }
+
+    public void finishMatch(UUID matchId) {
+        matchRepository.findById(matchId).ifPresent(match -> {
+            Instant now = Instant.now();
+            computeAndUpdateCurrentMinute(match, now);
+            match.setStatus(MatchStatus.FINISHED);
+            match.setClockState(MatchClockState.FINISHED);
+            match.setFinishedAt(now);
+            matchRepository.save(match);
+        });
     }
 
     public MatchEvent logRandomEventForRandomLiveMatch() {
@@ -100,12 +238,27 @@ public class MatchOperationsService {
         MatchEventType type = pickRandomEventType();
         boolean forHomeTeam = random.nextBoolean();
 
+        return createEvent(match, type, forHomeTeam, true);
+    }
+
+    public MatchEvent logManualEvent(UUID matchId, String teamSide, MatchEventType type) {
+        Optional<Match> optionalMatch = matchRepository.findById(matchId);
+        if (optionalMatch.isEmpty()) {
+            return null;
+        }
+
+        Match match = optionalMatch.get();
+        boolean forHomeTeam = "HOME".equalsIgnoreCase(teamSide);
+        return createEvent(match, type, forHomeTeam, false);
+    }
+
+    private MatchEvent createEvent(Match match, MatchEventType type, boolean forHomeTeam, boolean generated) {
+
         Team team = forHomeTeam ? match.getHomeTeam() : match.getAwayTeam();
         List<Player> players = playerRepository.findByTeam(team);
         Player player = players.isEmpty() ? null : players.get(random.nextInt(players.size()));
 
-        Integer minute = Optional.ofNullable(match.getCurrentMinute()).orElse(1) + random.nextInt(3) + 1;
-        match.setCurrentMinute(minute);
+        int minute = computeAndUpdateCurrentMinute(match, Instant.now());
 
         if (type == MatchEventType.GOAL) {
             if (forHomeTeam) {
@@ -127,7 +280,7 @@ public class MatchOperationsService {
         String jsonDetails = "{" +
             "\"teamSide\":\"" + teamSide + "\"," +
             (playerName != null ? "\"playerName\":\"" + playerName + "\"," : "") +
-            "\"generated\":true" +
+            "\"generated\":" + (generated ? "true" : "false") +
             "}";
         event.setDetails(jsonDetails);
 
@@ -136,6 +289,26 @@ public class MatchOperationsService {
 
         matchRepository.save(match);
         return matchEventRepository.save(event);
+    }
+
+    private int computeAndUpdateCurrentMinute(Match match, Instant now) {
+        Integer offsetSeconds = match.getClockOffsetSeconds();
+        if (offsetSeconds == null) {
+            offsetSeconds = 0;
+        }
+
+        if (match.getClockState() == MatchClockState.RUNNING && match.getClockLastStartedAt() != null) {
+            long delta = Duration.between(match.getClockLastStartedAt(), now).getSeconds();
+            if (delta > 0) {
+                offsetSeconds += (int) delta;
+                match.setClockOffsetSeconds(offsetSeconds);
+                match.setClockLastStartedAt(now);
+            }
+        }
+
+        int minute = Math.max(0, offsetSeconds / 60);
+        match.setCurrentMinute(minute);
+        return minute;
     }
 
     private MatchEventType pickRandomEventType() {

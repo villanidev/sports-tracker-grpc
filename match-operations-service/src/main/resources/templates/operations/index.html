@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <title>Match Operations Backoffice</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <style>
       body {
         font-family: system-ui, sans-serif;
@@ -28,59 +29,230 @@
       }
     </style>
   </head>
-  <body>
+  <body hx-boost="true">
     <h1>Match Operations Backoffice</h1>
 
-    <section>
-      <h2>Live Matches</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Home</th>
-            <th>Away</th>
-            <th>Status</th>
-            <th>Score</th>
-            <th>Minute</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr th:each="m : ${liveMatches}">
-            <td th:text="${m.id}"></td>
-            <td th:text="${m.homeTeam.name}"></td>
-            <td th:text="${m.awayTeam.name}"></td>
-            <td th:text="${m.status}"></td>
-            <td th:text="${m.homeScore} + ' - ' + ${m.awayScore}"></td>
-            <td th:text="${m.currentMinute}"></td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
+    <div id="operations-root" th:fragment="operationsRoot">
+      <nav style="margin-bottom: 1rem">
+        <a href="/operations" style="margin-right: 1rem">Matches</a>
+        <a href="/operations/teams">Teams</a>
+      </nav>
 
-    <section>
-      <h2>Latest Events</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Match</th>
-            <th>Type</th>
-            <th>Player</th>
-            <th>Minute</th>
-            <th>Created At</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr th:each="e : ${latestEvents}">
-            <td th:text="${e.match.id}"></td>
-            <td th:text="${e.eventType}"></td>
-            <td th:text="${e.player != null ? e.player.name : 'N/A'}"></td>
-            <td th:text="${e.minute}"></td>
-            <td th:text="${e.createdAt}"></td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
+      <section>
+        <h2>Create Match</h2>
+        <form
+          th:action="@{/operations/match/create}"
+          method="post"
+          hx-post="/operations/match/create"
+          hx-target="#operations-root"
+          hx-swap="outerHTML"
+        >
+          <label>
+            Home
+            <select name="homeTeamId">
+              <option
+                th:each="t : ${teams}"
+                th:value="${t.id}"
+                th:text="${t.name}"
+              ></option>
+            </select>
+          </label>
+          <label style="margin-left: 1rem">
+            Away
+            <select name="awayTeamId">
+              <option
+                th:each="t : ${teams}"
+                th:value="${t.id}"
+                th:text="${t.name}"
+              ></option>
+            </select>
+          </label>
+          <button type="submit" style="margin-left: 1rem">Create</button>
+        </form>
+      </section>
 
-    <p>Simulation runs every 30 seconds and logs to the application console.</p>
+      <section>
+        <h2>Matches</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Home</th>
+              <th>Away</th>
+              <th>Status</th>
+              <th>Score</th>
+              <th>Minute</th>
+              <th>Demo</th>
+              <th>Controls</th>
+              <th>Manual Events</th>
+              <th>Danger</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="m : ${allMatches}">
+              <td th:text="${m.id}"></td>
+              <td th:text="${m.homeTeam.name}"></td>
+              <td th:text="${m.awayTeam.name}"></td>
+              <td th:text="${m.status}"></td>
+              <td th:text="${m.homeScore} + ' - ' + ${m.awayScore}"></td>
+              <td th:text="${m.currentMinute}"></td>
+              <td>
+                <form
+                  th:action="@{/operations/match/demo}"
+                  method="post"
+                  style="display: inline"
+                  hx-post="/operations/match/demo"
+                  hx-target="#operations-root"
+                  hx-swap="outerHTML"
+                >
+                  <input type="hidden" name="matchId" th:value="${m.id}" />
+                  <input
+                    type="hidden"
+                    name="enabled"
+                    th:value="${!#bools.isTrue(m.demoModeEnabled)}"
+                  />
+                  <button
+                    type="submit"
+                    th:text="${#bools.isTrue(m.demoModeEnabled)} ? 'Disable Demo' : 'Enable Demo'"
+                  ></button>
+                </form>
+              </td>
+              <td>
+                <form
+                  th:if="${m.status == SCHEDULED}"
+                  th:action="@{/operations/match/start}"
+                  method="post"
+                  style="display: inline"
+                  hx-post="/operations/match/start"
+                  hx-target="#operations-root"
+                  hx-swap="outerHTML"
+                >
+                  <input type="hidden" name="matchId" th:value="${m.id}" />
+                  <button type="submit">Start</button>
+                </form>
+                <form
+                  th:if="${m.clockState == RUNNING}"
+                  th:action="@{/operations/match/pause}"
+                  method="post"
+                  style="display: inline"
+                  hx-post="/operations/match/pause"
+                  hx-target="#operations-root"
+                  hx-swap="outerHTML"
+                >
+                  <input type="hidden" name="matchId" th:value="${m.id}" />
+                  <button type="submit">Pause</button>
+                </form>
+                <form
+                  th:if="${m.clockState == PAUSED or m.clockState == HALF_TIME}"
+                  th:action="@{/operations/match/resume}"
+                  method="post"
+                  style="display: inline"
+                  hx-post="/operations/match/resume"
+                  hx-target="#operations-root"
+                  hx-swap="outerHTML"
+                >
+                  <input type="hidden" name="matchId" th:value="${m.id}" />
+                  <button type="submit">Resume</button>
+                </form>
+                <form
+                  th:if="${m.status == LIVE}"
+                  th:action="@{/operations/match/half-time}"
+                  method="post"
+                  style="display: inline"
+                  hx-post="/operations/match/half-time"
+                  hx-target="#operations-root"
+                  hx-swap="outerHTML"
+                >
+                  <input type="hidden" name="matchId" th:value="${m.id}" />
+                  <button type="submit">Half-time</button>
+                </form>
+                <form
+                  th:if="${m.status != FINISHED}"
+                  th:action="@{/operations/match/finish}"
+                  method="post"
+                  style="display: inline"
+                  hx-post="/operations/match/finish"
+                  hx-target="#operations-root"
+                  hx-swap="outerHTML"
+                >
+                  <input type="hidden" name="matchId" th:value="${m.id}" />
+                  <button type="submit">Finish</button>
+                </form>
+              </td>
+              <td>
+                <form
+                  th:if="${m.status == LIVE or m.status == HALF_TIME}"
+                  th:action="@{/operations/match/event}"
+                  method="post"
+                  hx-post="/operations/match/event"
+                  hx-target="#operations-root"
+                  hx-swap="outerHTML"
+                >
+                  <input type="hidden" name="matchId" th:value="${m.id}" />
+                  <label>
+                    Team
+                    <select name="teamSide">
+                      <option value="HOME">Home</option>
+                      <option value="AWAY">Away</option>
+                    </select>
+                  </label>
+                  <label style="margin-left: 0.5rem">
+                    Event
+                    <select name="eventType">
+                      <option value="GOAL">Goal</option>
+                      <option value="YELLOW_CARD">Yellow Card</option>
+                      <option value="RED_CARD">Red Card</option>
+                      <option value="SUBSTITUTION">Substitution</option>
+                    </select>
+                  </label>
+                  <button type="submit" style="margin-left: 0.5rem">Add</button>
+                </form>
+              </td>
+              <td>
+                <form
+                  th:action="@{/operations/match/delete}"
+                  method="post"
+                  hx-post="/operations/match/delete"
+                  hx-target="#operations-root"
+                  hx-swap="outerHTML"
+                >
+                  <input type="hidden" name="matchId" th:value="${m.id}" />
+                  <button type="submit">Delete</button>
+                </form>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Latest Events</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Match</th>
+              <th>Type</th>
+              <th>Player</th>
+              <th>Minute</th>
+              <th>Created At</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="e : ${latestEvents}">
+              <td th:text="${e.match.id}"></td>
+              <td th:text="${e.eventType}"></td>
+              <td th:text="${e.player != null ? e.player.name : 'N/A'}"></td>
+              <td th:text="${e.minute}"></td>
+              <td th:text="${e.createdAt}"></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <p>
+        Demo simulation runs every 30 seconds for matches with demo mode enabled
+        and status LIVE.
+      </p>
+    </div>
   </body>
 </html>
